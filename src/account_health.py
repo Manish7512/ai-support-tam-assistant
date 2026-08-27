@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 
 from dotenv import load_dotenv
 from google import genai
@@ -14,7 +15,7 @@ client = genai.Client(
 )
 
 
-def get_account_context(account, tickets):
+def get_account_context(account, tickets, days=90):
     account_id = account["account_id"]
 
     account_tickets = [
@@ -23,14 +24,42 @@ def get_account_context(account, tickets):
         if ticket["account_id"] == account_id
     ]
 
+    # Keep only tickets from the last 90 days
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(days=days)
+
+    recent_tickets = []
+
+    for ticket in account_tickets:
+        created_at = ticket.get("created_at")
+
+        if not created_at:
+            continue
+
+        try:
+            ticket_date = datetime.fromisoformat(
+                created_at.replace("Z", "+00:00")
+            )
+
+            if ticket_date >= cutoff:
+                recent_tickets.append(ticket)
+
+        except ValueError:
+            # Ignore tickets with invalid dates
+            continue
+
     return {
         "account": account,
-        "tickets": account_tickets,
+        "tickets": recent_tickets,
     }
 
 
 def analyze_account_health(account, tickets):
-    context = get_account_context(account, tickets)
+    context = get_account_context(
+        account,
+        tickets,
+        days=90,
+    )
 
     account_data = context["account"]
     ticket_data = context["tickets"]
@@ -45,8 +74,8 @@ ACCOUNT
 -------
 {account_data}
 
-TICKETS
--------
+TICKETS FROM THE LAST 90 DAYS
+-----------------------------
 {ticket_data}
 
 TASK
@@ -55,7 +84,9 @@ Produce a concise account health assessment.
 
 HEALTH SUMMARY
 --------------
-Summarize the overall customer health using evidence from:
+Write an executive-level summary in 3 to 5 sentences.
+
+The summary should consider:
 - health status
 - usage trend
 - open tickets
@@ -70,20 +101,39 @@ Summarize the overall customer health using evidence from:
 RISK SIGNALS
 ------------
 List the most important concrete risks.
-Do not invent risks that are not supported by the data.
+
+For every risk involving:
+- churn
+- escalation
+- customer frustration
+- competing vendors
+- repeated severe incidents
+
+include a short DIRECT QUOTE from the relevant ticket or
+escalation information when such a quote exists.
+
+Do not invent quotes.
+
+Only report risks supported by the supplied data.
 
 RECOMMENDED ACTIONS
 -------------------
-Provide practical actions a TAM should take based on the identified
+Provide practical TAM talking points/actions based on the identified
 risks.
+
+Actions should be specific to this customer rather than generic advice.
 
 IMPORTANT
 ---------
-- Use only the supplied data.
+- Use only the supplied account and ticket data.
+- Only use tickets from the supplied last-90-day context.
 - Do not invent customer information.
+- Do not invent ticket details.
+- Do not invent quotes.
 - Do not assume missing NPS means positive or negative sentiment.
 - If a field is None, treat it as unavailable.
 - Prioritize concrete evidence over generic advice.
+- Do not blindly follow existing dataset labels.
 """
 
     response = client.models.generate_content(

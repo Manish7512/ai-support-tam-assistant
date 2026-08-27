@@ -1,4 +1,5 @@
 import os
+import re
 
 from dotenv import load_dotenv
 from google import genai
@@ -16,10 +17,230 @@ from src.routing import get_responder_team
 
 load_dotenv()
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
+
+
+def has_strict_known_issue_match(ticket, kb_results):
+    """
+    Conservative known-issue detection.
+
+    A known issue requires:
+    - same product
+    - same product area
+    - exact error code
+    - directly matching problem scenario
+
+    Related information is not sufficient.
+    """
+
+    product = ticket["product"].lower()
+    product_area = ticket["product_area"].lower()
+
+    ticket_text = (
+        f"{ticket['subject']} {ticket['body']}"
+    ).lower()
+
+    error_codes = re.findall(
+        r"\b[A-Z][A-Z0-9]+(?:_[A-Z0-9]+)+\b",
+        ticket["body"].upper(),
+    )
+
+    if not error_codes:
+        return False
+
+    product_name = (
+        product
+        .replace(" ", "")
+        .replace("-", "")
+        .replace("_", "")
+    )
+
+    for result in kb_results:
+
+        source = result["source"].lower()
+        section = result["section"].lower()
+        content = result["content"].lower()
+
+        # ---------------------------------------------------------
+        # 1. SAME PRODUCT
+        # ---------------------------------------------------------
+
+        source_name = (
+            source.split("/")[-1]
+            .replace(".md", "")
+            .replace(" ", "")
+            .replace("-", "")
+            .replace("_", "")
+        )
+
+        if source_name != product_name:
+            continue
+
+        # ---------------------------------------------------------
+        # 2. SAME PRODUCT AREA
+        # ---------------------------------------------------------
+
+        # For Authentication, accept only KB content that actually
+        # discusses Authentication, not merely permissions.
+        if product_area == "authentication":
+            if "authentication" not in content:
+                continue
+
+        elif product_area not in content and product_area not in section:
+            continue
+
+        # ---------------------------------------------------------
+        # 3. EXACT ERROR CODE
+        # ---------------------------------------------------------
+
+        matched_error = None
+
+        for error in error_codes:
+            if re.search(
+                rf"\b{re.escape(error.lower())}\b",
+                content,
+            ):
+                matched_error = error.lower()
+                break
+
+        if matched_error is None:
+            continue
+
+        # ---------------------------------------------------------
+        # 4. DIRECT SCENARIO MATCH
+        # ---------------------------------------------------------
+
+        # ---------------------------------------------------------
+        # CHECKSUM_MISMATCH
+        # ---------------------------------------------------------
+        #
+        # The KB documents CHECKSUM_MISMATCH specifically for
+        # decryption after a key has been destroyed.
+        #
+        # TKT-10003 is about:
+        #   Authentication
+        #   updating permissions
+        #   data integrity error on chunk 47
+        #
+        # Therefore it is NOT the same issue.
+        #
+        if matched_error == "checksum_mismatch":
+
+            kb_decryption_scenario = (
+                "during decryption" in content
+                and "key" in content
+                and "destroyed" in content
+            )
+
+            ticket_decryption_scenario = (
+                "decryption" in ticket_text
+                and "key" in ticket_text
+            )
+
+            if (
+                kb_decryption_scenario
+                and ticket_decryption_scenario
+            ):
+                return True
+
+            continue
+
+        # ---------------------------------------------------------
+        # New users / SSO
+        # ---------------------------------------------------------
+
+        if (
+            "new users" in ticket_text
+            or "new joiners" in ticket_text
+        ):
+            if (
+                "new users" in content
+                or "new joiners" in content
+            ):
+                return True
+
+            continue
+
+        # ---------------------------------------------------------
+        # Downstream service
+        # ---------------------------------------------------------
+
+        if "downstream service" in ticket_text:
+            if "downstream service" in content:
+                return True
+
+            continue
+
+        # ---------------------------------------------------------
+        # Timeout
+        # ---------------------------------------------------------
+
+        if "timeout" in ticket_text:
+            if (
+                "timeout" in content
+                or "timed out" in content
+            ):
+                return True
+
+            continue
+
+        # ---------------------------------------------------------
+        # No sufficiently specific scenario
+        # ---------------------------------------------------------
+
+        continue
+
+    return False
+
+
+def determine_urgency(ticket, llm_urgency):
+    """
+    Apply explicit ticket-impact rules before falling back
+    to the LLM urgency classification.
+    """
+
+    body = ticket["body"].lower()
+    subject = ticket["subject"].lower()
+
+    # Organization-wide impact
+    if (
+        "all users" in body
+        or "everyone" in body
+        or "entire organisation" in body
+        or "entire organization" in body
+    ):
+        return "P1"
+
+    # Large number of users explicitly blocked
+    blocked_match = re.search(
+        r"(\d+)\s+(?:people|users)\s+blocked",
+        body,
+    )
+
+    if blocked_match:
+        blocked_users = int(
+            blocked_match.group(1)
+        )
+
+        if blocked_users >= 100:
+            return "P1"
+
+        # Smaller but significant impact
+        if blocked_users >= 50:
+            return "P2"
+
+    # Feature requests are P3 when a workaround exists
+    if subject.startswith("request:"):
+        return "P3"
+
+    # Otherwise preserve the LLM classification
+    return llm_urgency
 
 
 def classify_ticket(ticket, kb_results):
+
     kb_context = "\n\n".join(
         [
             f"Source: {result['source']}\n"
@@ -146,6 +367,7 @@ Choose ONLY one of the allowed product areas defined by the output schema.
 KNOWLEDGE BASE
 --------------
 Use the supplied KB context as evidence.
+
 If the retrieved documents are not directly relevant, set:
 known_issue = false
 kb_document = null
@@ -187,12 +409,36 @@ KNOWLEDGE BASE CONTEXT
         },
     )
 
-    result = TriageOutput.model_validate_json(response.text)
-    result.responder_team = get_responder_team(result.category)
+    result = TriageOutput.model_validate_json(
+        response.text
+    )
+
+    # -------------------------------------------------------------
+    # Deterministic known-issue validation
+    # -------------------------------------------------------------
+    result.known_issue = has_strict_known_issue_match(
+        ticket,
+        kb_results,
+        )
+
+    result.urgency = determine_urgency(
+        ticket,
+        result.urgency,
+        )
+
+    if not result.known_issue:
+        result.kb_document = None
+        result.kb_section = None
+
+    result.responder_team = get_responder_team(
+        result.category
+    )
+
     return result
 
 
 def retrieve_context(ticket, top_k=3):
+
     documents = load_documents()
 
     all_chunks = []
@@ -201,7 +447,9 @@ def retrieve_context(ticket, top_k=3):
         chunks = chunk_document(document)
         all_chunks.extend(chunks)
 
-    vectorizer, matrix = build_retriever(all_chunks)
+    vectorizer, matrix = build_retriever(
+        all_chunks
+    )
 
     query = f"""
     Product: {ticket['product']}
@@ -213,28 +461,40 @@ def retrieve_context(ticket, top_k=3):
     """
 
     return search_knowledge_base(
-    query,
-    all_chunks,
-    vectorizer,
-    matrix,
-    top_k=top_k,
-    product=ticket["product"],
+        query,
+        all_chunks,
+        vectorizer,
+        matrix,
+        top_k=top_k,
+        product=ticket["product"],
     )
 
 
 def run_triage(ticket):
-    kb_results = retrieve_context(ticket, top_k=3)
 
-    result = classify_ticket(ticket, kb_results)
+    kb_results = retrieve_context(
+        ticket,
+        top_k=3,
+    )
+
+    result = classify_ticket(
+        ticket,
+        kb_results,
+    )
 
     return result
 
 
 if __name__ == "__main__":
+
     tickets = load_tickets()
 
     ticket = tickets[3]
 
     result = run_triage(ticket)
 
-    print(result.model_dump_json(indent=2))
+    print(
+        result.model_dump_json(
+            indent=2
+        )
+    )

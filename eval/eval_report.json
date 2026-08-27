@@ -1,0 +1,239 @@
+{
+  "task": "ticket_triage",
+  "test_cases": [
+    {
+      "ticket_id": "TKT-10000",
+      "subject": "Request: bulk archive entries in DataBridge Pro Data Ingestion",
+      "expected_category": "Feature Request",
+      "predicted_category": "Feature Request",
+      "expected_urgency": "P3",
+      "predicted_urgency": "P3",
+      "expected_known_issue": false,
+      "predicted_known_issue": false,
+      "category_pass": true,
+      "urgency_pass": true,
+      "known_issue_pass": true,
+      "passed": true,
+      "quality_score": 1.0,
+      "adversarial": false
+    },
+    {
+      "ticket_id": "TKT-10001",
+      "subject": "Request: bulk run batch import in AnalyticsHub Data Sources",
+      "expected_category": "Feature Request",
+      "predicted_category": "Feature Request",
+      "expected_urgency": "P3",
+      "predicted_urgency": "P3",
+      "expected_known_issue": false,
+      "predicted_known_issue": false,
+      "category_pass": true,
+      "urgency_pass": true,
+      "known_issue_pass": true,
+      "passed": true,
+      "quality_score": 1.0,
+      "adversarial": false
+    },
+    {
+      "ticket_id": "TKT-10003",
+      "subject": "Error when accessing Authentication in SecureVault",
+      "expected_category": "Bug",
+      "predicted_category": "Bug",
+      "expected_urgency": "P1",
+      "predicted_urgency": "P1",
+      "expected_known_issue": false,
+      "predicted_known_issue": false,
+      "category_pass": true,
+      "urgency_pass": true,
+      "known_issue_pass": true,
+      "passed": true,
+      "quality_score": 1.0,
+      "adversarial": false
+    },
+    {
+      "ticket_id": "TKT-10004",
+      "subject": "SSO configuration not working for new users \u2014 CloudSync",
+      "expected_category": "Integration",
+      "predicted_category": "Integration",
+      "expected_urgency": "P1",
+      "predicted_urgency": "P1",
+      "expected_known_issue": false,
+      "predicted_known_issue": false,
+      "category_pass": true,
+      "urgency_pass": true,
+      "known_issue_pass": true,
+      "passed": true,
+      "quality_score": 1.0,
+      "adversarial": false
+    },
+    {
+      "ticket_id": "TKT-10005",
+      "subject": "SSO configuration not working for new users \u2014 AnalyticsHub",
+      "expected_category": "Integration",
+      "predicted_category": "Integration",
+      "expected_urgency": "P2",
+      "predicted_urgency": "P2",
+      "expected_known_issue": false,
+      "predicted_known_issue": false,
+      "category_pass": true,
+      "urgency_pass": true,
+      "known_issue_pass": true,
+      "passed": true,
+      "quality_score": 1.0,
+      "adversarial": true
+    }
+  ],
+  "summary": {
+    "total_tests": 5,
+    "passed": 5,
+    "category_accuracy": 1.0,
+    "urgency_accuracy": 1.0,
+    "known_issue_accuracy": 1.0,
+    "overall_accuracy": 1.0,
+    "average_quality_score": 1.0
+  },
+  "account_health": {
+    "task": "account_health",
+    "test_cases": [
+      {
+        "account_id": "ACC-3336",
+        "company": "Omni Consumer Products",
+        "expected_status": "At Risk",
+        "predicted_status": "At Risk",
+        "passed": true,
+        "quality_score": 1.0
+      },
+      {
+        "account_id": "ACC-3033",
+        "company": "Polaris Group",
+        "expected_status": "Healthy",
+        "predicted_status": "Healthy",
+        "passed": true,
+        "quality_score": 1.0
+      },
+      {
+        "account_id": "ACC-7893",
+        "company": "Solaris Data",
+        "expected_status": "New",
+        "predicted_status": "New",
+        "passed": true,
+        "quality_score": 1.0
+      },
+      {
+        "account_id": "ACC-2944",
+        "company": "Pinnacle Systems",
+        "expected_status": "Churning",
+        "predicted_status": "Churning",
+        "passed": true,
+        "quality_score": 1.0
+      },
+      {
+        "account_id": "ACC-7042",
+        "company": "Hooli Corp",
+        "expected_status": "Churning",
+        "predicted_status": "Churning",
+        "passed": true,
+        "quality_score": 1.0
+      }
+    ],
+    "summary": {
+      "total_tests": 5,
+      "passed": 5,
+      "health_status_accuracy": 1.0,
+      "average_quality_score": 1.0
+    }
+  },
+  "ticket_triage": {
+    "task": "ticket_triage",
+    "test_cases": [
+      {
+        "ticket_id": "TKT-10000",
+        "subject": "Request: bulk archive entries in DataBridge Pro Data Ingestion",
+        "expected_category": "Feature Request",
+        "predicted_category": "Feature Request",
+        "expected_urgency": "P3",
+        "predicted_urgency": "P3",
+        "expected_known_issue": false,
+        "predicted_known_issue": false,
+        "category_pass": true,
+        "urgency_pass": true,
+        "known_issue_pass": true,
+        "passed": true,
+        "quality_score": 1.0,
+        "adversarial": false
+      },
+      {
+        "ticket_id": "TKT-10001",
+        "subject": "Request: bulk run batch import in AnalyticsHub Data Sources",
+        "expected_category": "Feature Request",
+        "predicted_category": "Feature Request",
+        "expected_urgency": "P3",
+        "predicted_urgency": "P3",
+        "expected_known_issue": false,
+        "predicted_known_issue": false,
+        "category_pass": true,
+        "urgency_pass": true,
+        "known_issue_pass": true,
+        "passed": true,
+        "quality_score": 1.0,
+        "adversarial": false
+      },
+      {
+        "ticket_id": "TKT-10003",
+        "subject": "Error when accessing Authentication in SecureVault",
+        "expected_category": "Bug",
+        "predicted_category": "Bug",
+        "expected_urgency": "P1",
+        "predicted_urgency": "P1",
+        "expected_known_issue": false,
+        "predicted_known_issue": false,
+        "category_pass": true,
+        "urgency_pass": true,
+        "known_issue_pass": true,
+        "passed": true,
+        "quality_score": 1.0,
+        "adversarial": false
+      },
+      {
+        "ticket_id": "TKT-10004",
+        "subject": "SSO configuration not working for new users \u2014 CloudSync",
+        "expected_category": "Integration",
+        "predicted_category": "Integration",
+        "expected_urgency": "P1",
+        "predicted_urgency": "P1",
+        "expected_known_issue": false,
+        "predicted_known_issue": false,
+        "category_pass": true,
+        "urgency_pass": true,
+        "known_issue_pass": true,
+        "passed": true,
+        "quality_score": 1.0,
+        "adversarial": false
+      },
+      {
+        "ticket_id": "TKT-10005",
+        "subject": "SSO configuration not working for new users \u2014 AnalyticsHub",
+        "expected_category": "Integration",
+        "predicted_category": "Integration",
+        "expected_urgency": "P2",
+        "predicted_urgency": "P2",
+        "expected_known_issue": false,
+        "predicted_known_issue": false,
+        "category_pass": true,
+        "urgency_pass": true,
+        "known_issue_pass": true,
+        "passed": true,
+        "quality_score": 1.0,
+        "adversarial": true
+      }
+    ],
+    "summary": {
+      "total_tests": 5,
+      "passed": 5,
+      "category_accuracy": 1.0,
+      "urgency_accuracy": 1.0,
+      "known_issue_accuracy": 1.0,
+      "overall_accuracy": 1.0,
+      "average_quality_score": 1.0
+    }
+  }
+}
