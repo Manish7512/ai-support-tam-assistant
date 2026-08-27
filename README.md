@@ -5,7 +5,6 @@ An AI-powered Support & Technical Account Management assistant that automates **
 ## 🚀 Features
 
 ### Ticket Triage
-
 - Classifies product area and ticket category
 - Assigns P1–P4 urgency
 - Detects documented known issues
@@ -14,7 +13,6 @@ An AI-powered Support & Technical Account Management assistant that automates **
 - Generates a concise first response
 
 ### RAG Knowledge Retrieval
-
 - Local Markdown Knowledge Base
 - Section-based chunking
 - TF-IDF vectorization
@@ -23,9 +21,7 @@ An AI-powered Support & Technical Account Management assistant that automates **
 - Technical error-code matching and boosting
 
 ### Account Health
-
 Analyzes:
-
 - ARR and plan
 - Usage trends
 - Seat utilization
@@ -36,19 +32,15 @@ Analyzes:
 - Escalation notes
 
 Produces:
-
 - Health summary
 - Risk signals
 - Recommended actions
 
 ### Response Drafting
-
 Generates grounded customer-facing responses using the ticket and relevant KB context.
 
 ### REST API
-
 FastAPI endpoints for:
-
 - Ticket triage
 - Response drafting
 - Account health
@@ -315,18 +307,18 @@ The system is designed to:
 
 ## 📌 Current Status
 
-| Component          | Status |
-| ------------------ | ------ |
-| Ticket Triage      | ✅     |
-| RAG Retrieval      | ✅     |
-| Gemini Integration | ✅     |
-| Structured Output  | ✅     |
-| Responder Routing  | ✅     |
-| Account Health     | ✅     |
-| Response Drafting  | ✅     |
-| FastAPI            | ✅     |
-| Evaluation         | ✅     |
-| GitHub             | ✅     |
+| Component | Status |
+|---|---|
+| Ticket Triage | ✅ |
+| RAG Retrieval | ✅ |
+| Gemini Integration | ✅ |
+| Structured Output | ✅ |
+| Responder Routing | ✅ |
+| Account Health | ✅ |
+| Response Drafting | ✅ |
+| FastAPI | ✅ |
+| Evaluation | ✅ |
+| GitHub | ✅ |
 
 ---
 
@@ -341,6 +333,12 @@ The system is designed to:
 - Observability and tracing
 - Human approval workflow
 - Expanded automated grounding evaluation
+
+---
+
+## 📄 Design
+
+See [`DESIGN.md`](DESIGN.md) for architecture and design decisions.
 
 ---
 
